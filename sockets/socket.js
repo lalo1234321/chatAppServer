@@ -1,5 +1,5 @@
 // mensajes de sockets
-const { usuarioConectado, usuarioDesconectado } = require('../controllers/socket.js');
+const { usuarioConectado, usuarioDesconectado, grabarMensaje } = require('../controllers/socket.js');
 const { comprobarJWT } = require('../helpers/jwt.js');
 const {io} = require('../index.js');
 
@@ -18,6 +18,18 @@ io.on('connection', client => {
     if( !valido ) { return client.disconnect(); }
     console.log('Cliente autenticado');
     usuarioConectado( uid );
+
+    // Ingresar el usuario a una sala específica
+    // sala global
+    client.join( uid );
+
+    // escuchar del cliente el mensaje personal
+    client.on('mensaje-personal', async ( payload ) => {
+        console.log(payload);
+        await grabarMensaje( payload );
+        io.to( payload.para ).emit('mensaje-personal',payload);
+    } )
+
 
     client.on('disconnect', () => {
         console.log('Cliente desconectado');
